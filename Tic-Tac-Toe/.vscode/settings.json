@@ -1,0 +1,14 @@
+{
+    "nuxt.isNuxtApp": false,
+    "Lua.diagnostics.globals": [
+        "love",
+        "drawGrid",
+        "grid",
+        "whose_turn",
+        "clamp",
+        "next_turn",
+        "victory",
+        "check_victory",
+        "m"
+    ]
+}
