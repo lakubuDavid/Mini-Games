@@ -1,6 +1,7 @@
 # Tic Tac Toe - AI
 
 This is a simple Tic-Tac-Toe game with different AI implementations.
+It is also for me an opportunity to experiment with [love2d](https://love2d.org/)
 
 ## Bozo AI
 
@@ -33,9 +34,6 @@ While select one based on difficulty by :
 
 This one is a more agressive implementation of the min max algorithm that only chooses the best move (which makes it unbeatable 😂)
 
-
 ## Uses
 
 Feel free to try it and give me your feedbacks 😉
-
-
