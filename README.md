@@ -6,4 +6,4 @@ I have decided to work on simple projects that will help me improve my problem s
 
 Feel free to look at it and inspire yourself with it 😉.
 
-- [Tic-Tac-Toe Ai](<Tic Tac Toe (love2d)/README.md>)
+- [Tic-Tac-Toe Ai](<Tic-Tac-Toe/README.md>)
