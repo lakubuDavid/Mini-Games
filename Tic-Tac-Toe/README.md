@@ -3,11 +3,13 @@
 This is a simple Tic-Tac-Toe game with different AI implementations.
 It is also for me an opportunity to experiment with [love2d](https://love2d.org/)
 
-## Bozo AI
+## AI Implementations
+
+### Bozo AI
 
 This AI is the simplest one that just chooses a random free cell.
 
-## Relaxed AI
+### Relaxed AI
 
 This is an implementation of the min-max algorithm that's gets and sorts the best moves then <br/>
 While select one based on difficulty by : 
@@ -30,10 +32,19 @@ While select one based on difficulty by :
 
 ```
 
-## Agressive AI
+### Agressive AI
 
 This one is a more agressive implementation of the min max algorithm that only chooses the best move (which makes it unbeatable 😂)
 
 ## Uses
 
 Feel free to try it and give me your feedbacks 😉
+
+
+## Build
+
+To build it you will need to :
+1. Download a love2d executable (windows or mac depending on your platforn)
+2. For mac you will need to modify the love.app Plist file according to the official love2d documentation
+3. Then you can run the `build.sh` script
+4. Enjoy

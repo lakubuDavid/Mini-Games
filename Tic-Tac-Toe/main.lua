@@ -75,6 +75,7 @@ function love.mousepressed(x, y, button, isTouch)
                         if check_victory() then
                             victory = whose_turn
                             SCORE[whose_turn] = SCORE[whose_turn] + 1
+                            assets.PLAYER1_WIN_SFX:stop()
                             assets.PLAYER1_WIN_SFX:play()
                         elseif is_tie() then
                             assets.TIE_SFX:play()
@@ -109,6 +110,7 @@ function love.update(dt)
 
         if grid[move.row][move.col] == 0 then
             grid[move.row][move.col] = whose_turn
+            assets.CLICK2_SFX:stop()
             assets.CLICK2_SFX:play()
         end
         if check_victory() then
@@ -272,6 +274,7 @@ function increaseDifficulty()
     local l = current_difficulty + 1
     l = utils.clamp(l, 1, MAX_DIFFICULTY)
     setDifficulty(l)
+    assets.DIFF_UP_SFX:stop()
     assets.DIFF_UP_SFX:play()
 end
 
@@ -279,6 +282,7 @@ function decreaseDifficulty()
     local l = current_difficulty - 1
     l = utils.clamp(l, 1, MAX_DIFFICULTY)
     setDifficulty(l)
+    assets.DIFF_DOWN_SFX:stop()
     assets.DIFF_DOWN_SFX:play()
 end
 
