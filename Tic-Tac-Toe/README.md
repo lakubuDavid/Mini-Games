@@ -12,7 +12,7 @@ This AI is the simplest one that just chooses a random free cell.
 ### Relaxed AI
 
 This is an implementation of the min-max algorithm that's gets and sorts the best moves then <br/>
-While select one based on difficulty by : 
+Will select one based on difficulty by : 
 
 - Reducing the depth of the min-max algorithm depending on difficulty
 - Randomly select one of the best moves 
