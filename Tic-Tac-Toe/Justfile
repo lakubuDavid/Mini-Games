@@ -1,0 +1,72 @@
+# LÖVE2D Game Build Justfile
+
+# Configuration
+GAME_NAME := "Tic-Tac-Toe"
+DEVELOPER := "David Lakubu"
+VERSION := "1.0.0"
+LOVE_VERSION := "11.5"
+OUTPUT_DIR := "dist"
+
+# Build .love package
+love:
+    @mkdir -p {{OUTPUT_DIR}}
+    @zip -9 -r {{OUTPUT_DIR}}/{{GAME_NAME}}.love . -x "*.git*" -x "*.vscode*" -x "dist/*" -x "build/*"
+
+# Run the game using LÖVE
+run:
+    @love .
+
+# Create build.lua for love-build
+build-config:
+    @echo 'return {' > build.lua
+    @echo '  name = "{{GAME_NAME}}",' >> build.lua
+    @echo '  developer = "{{DEVELOPER}}",' >> build.lua
+    @echo '  output = "{{OUTPUT_DIR}}",' >> build.lua
+    @echo '  version = "{{VERSION}}",' >> build.lua
+    @echo '  love = "{{LOVE_VERSION}}",' >> build.lua
+    @echo '  ignore = {"dist", "build", ".vscode", ".git"},' >> build.lua
+    @echo '  platforms = {"windows", "macos", "linux"}' >> build.lua
+    @echo '}' >> build.lua
+
+# Build using love-build (cross-platform)
+build: build-config
+    @echo "Download love-build from: https://github.com/ellraiser/love-build/releases"
+    @echo "Then run: love-build /path/to/main.lua"
+
+# Platform-specific builds (requires love-build downloaded)
+build-windows: build-config
+    @echo "Running love-build for Windows..."
+    @# Add love-build binary path here
+    @echo "Usage: ./love-build.exe main.lua windows"
+
+build-macos: build-config
+    @echo "Running love-build for MacOS..."
+    @echo "Usage: ./love-build main.lua macos"
+
+build-linux: build-config
+    @echo "Running love-build for Linux..."
+    @echo "Usage: ./love-build main.lua linux"
+
+# Clean build artifacts
+clean:
+    @rm -rf {{OUTPUT_DIR}}
+    @rm -f {{GAME_NAME}}.love
+    @rm -f build.lua
+
+# Default target
+default: love
+
+# Help
+help:
+    @echo "LÖVE2D Game Build Targets:"
+    @echo "  run               - Run the game with LÖVE"
+    @echo "  love              - Create .love package (zip)"
+    @echo "  build             - Generate build.lua config"
+    @echo "  build-config      - Create build.lua for love-build"
+    @echo "  build-windows     - Build for Windows"
+    @echo "  build-macos       - Build for MacOS"
+    @echo "  build-linux       - Build for Linux"
+    @echo "  clean             - Clean build artifacts"
+    @echo ""
+    @echo "For cross-platform builds, download love-build from:"
+    @echo "  https://github.com/ellraiser/love-build/releases"

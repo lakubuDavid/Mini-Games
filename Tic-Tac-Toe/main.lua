@@ -22,6 +22,8 @@ local current_difficulty = 1
 
 MAX_DIFFICULTY = 5
 
+GAME_MODE = "ai" -- "ai" or "pvp"
+
 function love.load()
     assets.loadAssets()
 
@@ -52,6 +54,10 @@ function love.keypressed(key, _, is_repeat)
         increaseDifficulty()
     end
 
+    if key == 'm' and not is_repeat then
+        toggleGameMode()
+    end
+
     love.keyboard.keysPressed[key] = true
 end
 
@@ -61,7 +67,14 @@ end
 
 function love.mousepressed(x, y, button, isTouch)
     if button == 1 then
-        if victory == 0 and whose_turn == PLAYERS_TURN then
+        local canPlay = false
+        if GAME_MODE == "pvp" then
+            canPlay = true
+        elseif whose_turn == PLAYERS_TURN then
+            canPlay = true
+        end
+        
+        if victory == 0 and canPlay and whose_turn ~= 0 then
             if x > GRID_OFFSET.x and x < GRID_OFFSET.x + GRID_SIZE then
                 if y > GRID_OFFSET.y and y < GRID_OFFSET.y + GRID_SIZE then
                     local gx = math.floor((x - GRID_OFFSET.x) / TILE_WIDTH) + 1
@@ -70,13 +83,23 @@ function love.mousepressed(x, y, button, isTouch)
                     if grid[gy][gx] == 0 then
                         grid[gy][gx] = whose_turn
 
-                        assets.CLICK1_SFX:play()
+                        if whose_turn == 1 then
+                            assets.CLICK1_SFX:stop()
+                            assets.CLICK1_SFX:play()
+                        else
+                            assets.CLICK2_SFX:stop()
+                            assets.CLICK2_SFX:play()
+                        end
 
                         if check_victory() then
                             victory = whose_turn
                             SCORE[whose_turn] = SCORE[whose_turn] + 1
-                            assets.PLAYER1_WIN_SFX:stop()
-                            assets.PLAYER1_WIN_SFX:play()
+                            if whose_turn == 1 then
+                                assets.PLAYER1_WIN_SFX:stop()
+                                assets.PLAYER1_WIN_SFX:play()
+                            else
+                                assets.PLAYER2_WIN_SFX:play()
+                            end
                         elseif is_tie() then
                             assets.TIE_SFX:play()
                         else
@@ -102,7 +125,7 @@ end
 
 function love.update(dt)
     -- change some values based on your actions
-    if whose_turn ~= PLAYERS_TURN and victory == 0 and not is_tie() then
+    if GAME_MODE == "ai" and whose_turn ~= PLAYERS_TURN and victory == 0 and not is_tie() then
         local move = AI.think(grid, whose_turn)
         if move == nil then
             return
@@ -236,9 +259,16 @@ function drawHUD()
 
     love.graphics.setColor(1, 1, 1, 0.5)
     love.graphics.setFont(assets.SMALL_TEXT_FONT)
-    local d_text = "Difficulty : " .. difficulty_levels[current_difficulty] ..
-        "\nPress '[' to decrease and ']' to increase"
-    love.graphics.print(d_text, SCREEN_WIDTH - assets.SMALL_TEXT_FONT:getWidth(d_text) - 20, SCREEN_HEIGHT - 80)
+    
+    if GAME_MODE == "ai" then
+        local d_text = "Difficulty : " .. difficulty_levels[current_difficulty] ..
+            "\nPress '[' to decrease and ']' to increase"
+        love.graphics.print(d_text, SCREEN_WIDTH - assets.SMALL_TEXT_FONT:getWidth(d_text) - 20, SCREEN_HEIGHT - 80)
+    end
+
+    local mode_text = "Mode: " .. (GAME_MODE == "ai" and "vs AI (PvE)" or "vs Player (PvP)") ..
+        "\nPress 'M' to toggle"
+    love.graphics.print(mode_text, 20, SCREEN_HEIGHT - 80)
 end
 
 --
@@ -284,6 +314,15 @@ function decreaseDifficulty()
     setDifficulty(l)
     assets.DIFF_DOWN_SFX:stop()
     assets.DIFF_DOWN_SFX:play()
+end
+
+function toggleGameMode()
+    if GAME_MODE == "ai" then
+        GAME_MODE = "pvp"
+    else
+        GAME_MODE = "ai"
+    end
+    reset_game()
 end
 
 --
