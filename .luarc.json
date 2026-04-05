@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "workspace.library": [
+    "/Users/davidlaubu/.lualspaddons/love2d/library"
+  ],
+  "workspace.userThirdParty": [
+    "/Users/davidlaubu/.lualspaddons"
+  ],
+  "hint.enable": true,
+  "workspace.checkThirdParty": true,
+  "diagnostics.disable": [
+    "undefined-field",
+    "inject-field",
+    "duplicate-set-field"
+  ],
+  "diagnostics.globals": [
+    "love"
+  ]
+}
