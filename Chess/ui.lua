@@ -8,7 +8,7 @@ local UI = {
     black = {}
   },
   current_turn = "white",
-  text_color = common.Colors.WHITE
+  text_color = common.colors.rgba(255, 255, 255, 255)
 }
 
 function UI:new(copy)

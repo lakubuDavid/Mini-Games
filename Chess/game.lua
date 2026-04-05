@@ -39,8 +39,12 @@ function Game.init(self)
 end
 
 function Game:createMainMenu()
-  luis.newLayer("menu")
-  luis.setCurrentLayer("menu")
+   if luis.layerExists("menu") then
+     luis.removeLayer("menu")
+   end
+   
+   luis.newLayer("menu")
+   luis.setCurrentLayer("menu")
   
   local screenW = love.graphics.getWidth()
   local screenH = love.graphics.getHeight()
@@ -73,8 +77,12 @@ function Game:createMainMenu()
 end
 
 function Game:createPauseMenu()
-  luis.newLayer("pause")
-  luis.setCurrentLayer("pause")
+   if luis.layerExists("pause") then
+     luis.removeLayer("pause")
+   end
+   
+   luis.newLayer("pause")
+   luis.setCurrentLayer("pause")
   
   local screenW = love.graphics.getWidth()
   local screenH = love.graphics.getHeight()
@@ -221,6 +229,7 @@ function Game:draw()
     self.board:draw()
     self.board:drawOverlay()
     self.ui:draw()
+    luis.draw()
   elseif GameState.is(GameState.MENU) or GameState.is(GameState.THEMES) then
     luis.draw()
   end
