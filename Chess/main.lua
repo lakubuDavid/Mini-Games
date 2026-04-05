@@ -1,3 +1,4 @@
+package.path = package.path .. ";./lib/?.lua;./lib/?/init.lua"
 
 local lurker = require ("lib.lurker")
 local assets = require("assets")
