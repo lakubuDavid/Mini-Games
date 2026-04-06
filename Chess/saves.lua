@@ -33,17 +33,17 @@ function Saves.load()
 end
 
 function Saves.save(grid)
-  local file = io.open("w+")
+  local file = io.open("game.fen","w+")
 
   assert(file, [[ [Saves::FenSaver] Cannot open file "game.fen" ]])
 
-  local fen = gridToFEN(grid)
+  local fen = Saves.gridToFEN(grid)
   file:write(fen)
 
   file:close()
 end
 
-function gridToFEN(grid)
+function Saves.gridToFEN(grid)
   local fen = ""
   for rowIdx, row in ipairs(grid) do
     local whiteSpacesCount = 0
@@ -105,7 +105,7 @@ function Saves.gridFromFEN(fen)
       else
         local newPiece = { type = "", side = "" }
         newPiece.type = FEN_PIECE_MAP[char:lower().str]
-        newPiece.side = char:isLowerChar() and "white" or "black"
+        newPiece.side = char:isUpperChar() and "white" or "black"
         grid[row][col] = newPiece
         col = col + 1
       end
