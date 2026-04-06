@@ -79,7 +79,7 @@ function Board:new(copy)
   return instance
 end
 
-function Board:init()
+function Board:init(loadedGrid)
   self.grid = {}
   self.pieces = {}
 
@@ -90,46 +90,52 @@ function Board:init()
     end
   end
 
-  for col = 1, 8 do
-    local whitePawn = ChessPiece:new("white", "pawn")
-    whitePawn.gridPos = createGridPosition(col, 2)
-    whitePawn.grid_coordinates = { col = col, row = 2 }
-    whitePawn.position = getRenderPosition(col, 2, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
-    whitePawn.behaviour = BehaviourRegistry.create(whitePawn, self)
-    whitePawn:init()
-    self.pieces[#self.pieces + 1] = whitePawn
-    self.grid[2][col] = whitePawn
+  -- If a loaded grid is provided, populate pieces from it
+  if loadedGrid then
+    self:_populatePiecesFromGrid(loadedGrid)
+  else
+    -- Initialize starting position
+    for col = 1, 8 do
+      local whitePawn = ChessPiece:new("white", "pawn")
+      whitePawn.gridPos = createGridPosition(col, 2)
+      whitePawn.grid_coordinates = { col = col, row = 2 }
+      whitePawn.position = getRenderPosition(col, 2, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
+      whitePawn.behaviour = BehaviourRegistry.create(whitePawn, self)
+      whitePawn:init()
+      self.pieces[#self.pieces + 1] = whitePawn
+      self.grid[2][col] = whitePawn
 
-    local blackPawn = ChessPiece:new("black", "pawn")
-    blackPawn.gridPos = createGridPosition(col, 7)
-    blackPawn.grid_coordinates = { col = col, row = 7 }
-    blackPawn.position = getRenderPosition(col, 7, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
-    blackPawn.behaviour = BehaviourRegistry.create(blackPawn, self)
-    blackPawn:init()
-    self.pieces[#self.pieces + 1] = blackPawn
-    self.grid[7][col] = blackPawn
-  end
+      local blackPawn = ChessPiece:new("black", "pawn")
+      blackPawn.gridPos = createGridPosition(col, 7)
+      blackPawn.grid_coordinates = { col = col, row = 7 }
+      blackPawn.position = getRenderPosition(col, 7, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
+      blackPawn.behaviour = BehaviourRegistry.create(blackPawn, self)
+      blackPawn:init()
+      self.pieces[#self.pieces + 1] = blackPawn
+      self.grid[7][col] = blackPawn
+    end
 
-  for _, pieceData in ipairs(STARTING_POSITION.white) do
-    local piece = ChessPiece:new("white", pieceData.type)
-    piece.gridPos = createGridPosition(pieceData.col, 1)
-    piece.grid_coordinates = { col = pieceData.col, row = 1 }
-    piece.position = getRenderPosition(pieceData.col, 1, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
-    piece.behaviour = BehaviourRegistry.create(piece, self)
-    piece:init()
-    self.pieces[#self.pieces + 1] = piece
-    self.grid[1][pieceData.col] = piece
-  end
+    for _, pieceData in ipairs(STARTING_POSITION.white) do
+      local piece = ChessPiece:new("white", pieceData.type)
+      piece.gridPos = createGridPosition(pieceData.col, 1)
+      piece.grid_coordinates = { col = pieceData.col, row = 1 }
+      piece.position = getRenderPosition(pieceData.col, 1, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
+      piece.behaviour = BehaviourRegistry.create(piece, self)
+      piece:init()
+      self.pieces[#self.pieces + 1] = piece
+      self.grid[1][pieceData.col] = piece
+    end
 
-  for _, pieceData in ipairs(STARTING_POSITION.black) do
-    local piece = ChessPiece:new("black", pieceData.type)
-    piece.gridPos = createGridPosition(pieceData.col, 8)
-    piece.grid_coordinates = { col = pieceData.col, row = 8 }
-    piece.position = getRenderPosition(pieceData.col, 8, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
-    piece.behaviour = BehaviourRegistry.create(piece, self)
-    piece:init()
-    self.pieces[#self.pieces + 1] = piece
-    self.grid[8][pieceData.col] = piece
+    for _, pieceData in ipairs(STARTING_POSITION.black) do
+      local piece = ChessPiece:new("black", pieceData.type)
+      piece.gridPos = createGridPosition(pieceData.col, 8)
+      piece.grid_coordinates = { col = pieceData.col, row = 8 }
+      piece.position = getRenderPosition(pieceData.col, 8, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
+      piece.behaviour = BehaviourRegistry.create(piece, self)
+      piece:init()
+      self.pieces[#self.pieces + 1] = piece
+      self.grid[8][pieceData.col] = piece
+    end
   end
 
   self.promotionUI = PromotionUI:new()
@@ -137,6 +143,25 @@ function Board:init()
   Event.on("pawnPromotion", function(pawn, row)
     self.promotionUI:show(pawn, row, self.board_offset, self.CELL_SIZE)
   end)
+end
+
+-- Helper function to populate pieces from a loaded grid (from Saves)
+function Board:_populatePiecesFromGrid(loadedGrid)
+  for row = 1, 8 do
+    for col = 1, 8 do
+      local pieceData = loadedGrid[row][col]
+      if pieceData then
+        local piece = ChessPiece:new(pieceData.side, pieceData.type)
+        piece.gridPos = createGridPosition(col, row)
+        piece.grid_coordinates = { col = col, row = row }
+        piece.position = getRenderPosition(col, row, self.CELL_SIZE, self.board_offset.x, self.board_offset.y)
+        piece.behaviour = BehaviourRegistry.create(piece, self)
+        piece:init()
+        self.pieces[#self.pieces + 1] = piece
+        self.grid[row][col] = piece
+      end
+    end
+  end
 end
 
 function Board:reset()

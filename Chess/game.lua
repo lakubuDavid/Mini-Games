@@ -6,13 +6,16 @@ local assets = require("assets")
 local Board = require("board")
 local UI = require("ui")
 local GameState = require("gamestate")
+local Saves = require("saves")
+local SaveLoadMenu = require("widgets.saveload")
 local luis = require("luis.init")("luis/widgets")
 
 Game = {
   board = nil,
   ui = nil,
   pieces = {},
-  whose_turn = 1
+  whose_turn = 1,
+  saveLoadMenu = nil
 }
 
 function Game:new(copy)
@@ -34,6 +37,9 @@ function Game.init(self)
 
   self.ui = UI:new()
   self.ui:init()
+
+  self.saveLoadMenu = SaveLoadMenu:new()
+  self:_setupSaveLoadCallbacks()
 
   self:createMainMenu()
 end
@@ -77,33 +83,43 @@ function Game:createMainMenu()
 end
 
 function Game:createPauseMenu()
-   if luis.layerExists("pause") then
-     luis.removeLayer("pause")
-   end
+    if luis.layerExists("pause") then
+      luis.removeLayer("pause")
+    end
+    
+    luis.newLayer("pause")
+    luis.setCurrentLayer("pause")
    
-   luis.newLayer("pause")
-   luis.setCurrentLayer("pause")
-  
-  local screenW = love.graphics.getWidth()
-  local screenH = love.graphics.getHeight()
-  local centerX = math.floor(screenW / 2 / luis.gridSize)
-  local centerY = math.floor(screenH / 2 / luis.gridSize)
+   local screenW = love.graphics.getWidth()
+   local screenH = love.graphics.getHeight()
+   local centerX = math.floor(screenW / 2 / luis.gridSize)
+   local centerY = math.floor(screenH / 2 / luis.gridSize)
 
-   local titleLabel = luis.newLabel("Paused", 10, 4, centerY - 10, centerX - 5, "center")
-   luis.createElement("pause", "Label", titleLabel)
+    local titleLabel = luis.newLabel("Paused", 10, 4, centerY - 10, centerX - 5, "center")
+    luis.createElement("pause", "Label", titleLabel)
 
-   local resumeBtn = luis.newButton("Resume", 5, 2, function()
-     luis.removeLayer("pause")
-     GameState.set(GameState.PLAYING)
-   end, nil, centerY - 3, centerX - 2)
-   luis.createElement("pause", "Button", resumeBtn)
+    local resumeBtn = luis.newButton("Resume", 5, 2, function()
+      luis.removeLayer("pause")
+      GameState.set(GameState.PLAYING)
+    end, nil, centerY - 3, centerX - 2)
+    luis.createElement("pause", "Button", resumeBtn)
 
-   local menuBtn = luis.newButton("Main Menu", 5, 2, function()
-     luis.removeLayer("pause")
-     self:createMainMenu()
-     GameState.set(GameState.MENU)
-   end, nil, centerY + 1, centerX - 2)
-   luis.createElement("pause", "Button", menuBtn)
+    local saveBtn = luis.newButton("Save Game", 5, 2, function()
+      self.saveLoadMenu:showSaveDialog()
+    end, nil, centerY + 1, centerX - 2)
+    luis.createElement("pause", "Button", saveBtn)
+
+    local loadBtn = luis.newButton("Load Game", 5, 2, function()
+      self.saveLoadMenu:showLoadDialog()
+    end, nil, centerY + 5, centerX - 2)
+    luis.createElement("pause", "Button", loadBtn)
+
+    local menuBtn = luis.newButton("Main Menu", 5, 2, function()
+      luis.removeLayer("pause")
+      self:createMainMenu()
+      GameState.set(GameState.MENU)
+    end, nil, centerY + 9, centerX - 2)
+    luis.createElement("pause", "Button", menuBtn)
 end
 
 function Game:createThemeSelection()
@@ -180,6 +196,12 @@ function Game.resize(self, w, h)
 end
 
 function Game.mousepressed(self, x, y, button)
+  -- Handle save/load menu if visible
+  if self.saveLoadMenu and self.saveLoadMenu.visible then
+    self.saveLoadMenu:mousepressed(x, y, button)
+    return
+  end
+
   if GameState.is(GameState.PLAYING) then
     if button == 2 then
       self:createPauseMenu()
@@ -211,6 +233,14 @@ end
 
 function Game.keypressed(self, key)
   luis.keypressed(key)
+
+  -- Handle save/load menu escape key
+  if self.saveLoadMenu and self.saveLoadMenu.visible then
+    if key == "escape" then
+      self.saveLoadMenu:hide()
+    end
+    return
+  end
   
   if GameState.is(GameState.PLAYING) then
     if key == "escape" or key == "p" then
@@ -218,6 +248,46 @@ function Game.keypressed(self, key)
       GameState.set(GameState.PAUSED)
     end
   end
+end
+
+function Game:_setupSaveLoadCallbacks()
+  self.saveLoadMenu:setSaveCallback(function(slotNumber)
+    print("[Game] Saving game to slot " .. slotNumber)
+    -- Convert board grid to saveable grid format
+    local saveGrid = {}
+    for row = 1, 8 do
+      saveGrid[row] = {}
+      for col = 1, 8 do
+        local piece = self.board.grid[row][col]
+        if piece then
+          saveGrid[row][col] = {
+            type = piece.type,
+            side = piece.side
+          }
+        else
+          saveGrid[row][col] = nil
+        end
+      end
+    end
+    -- Save using SaveLoadMenu's save function
+    self.saveLoadMenu:saveGameToSlot(saveGrid, slotNumber)
+    print("[Game] Game saved successfully to slot " .. slotNumber)
+  end)
+
+  self.saveLoadMenu:setLoadCallback(function(slotNumber, grid)
+    print("[Game] Loading game from slot " .. slotNumber)
+    if grid then
+      -- Reset board with loaded grid
+      self.board:reset()
+      self.board:init(grid)
+      print("[Game] Game loaded and board initialized")
+      GameState.set(GameState.PLAYING)
+    end
+  end)
+
+  self.saveLoadMenu:setCancelCallback(function()
+    print("[Game] Save/load cancelled")
+  end)
 end
 
 function Game:draw()
@@ -232,6 +302,11 @@ function Game:draw()
     luis.draw()
   elseif GameState.is(GameState.MENU) or GameState.is(GameState.THEMES) then
     luis.draw()
+  end
+  
+  -- Draw save/load menu on top of everything
+  if self.saveLoadMenu then
+    self.saveLoadMenu:draw()
   end
 end
 
