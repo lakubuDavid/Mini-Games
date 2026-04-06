@@ -16,8 +16,19 @@ function Strings:new(content)
     instance = { str = tostring(content) }
   end
   setmetatable(instance, self)
-  self.__index = self
   return instance
+end
+
+function Strings:__index(key)
+  -- Numeric indexing for character access (1-based)
+  if type(key) == "number" then
+    if key >= 1 and key <= #self.str then
+      return self.str:sub(key, key)
+    end
+    return nil
+  end
+  -- Method/property lookup
+  return rawget(Strings, key)
 end
 
 function Strings:__tostring()
