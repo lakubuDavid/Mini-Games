@@ -40,7 +40,7 @@ function Strings:__len()
 end
 
 function Strings:__concat(a, b)
-  return Strings:new(tostring(a)..tostring(b))
+  return Strings:new(tostring(a) .. tostring(b))
 end
 
 function Strings:__pairs()
@@ -58,6 +58,16 @@ function Strings:__pairs()
   end, self, nil
 end
 
+function Strings:__eq(b)
+  if type(b) == "table" and
+      b.___className and
+      b.___className == "Strings" then
+    return self.str == b
+  else
+    return self.str == tostring(b)
+  end
+end
+
 function Strings:chars()
   local index = 0
   local len = #self.str
@@ -65,7 +75,7 @@ function Strings:chars()
   return function()
     index = index + 1
     if index <= len then
-      return str:sub(index, index)
+      return Strings:new(str:sub(index, index))
     end
   end
 end
@@ -106,6 +116,10 @@ function Strings:split(separator)
   end
 
   return parts
+end
+
+function Strings:charAt(index)
+  return Strings:new(string.sub(self.str,index,index))
 end
 
 -- Split the string based on teh separator and unpack the result

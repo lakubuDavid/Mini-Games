@@ -28,16 +28,22 @@ print("Created test grid with:")
 print("  - White: King on e1, Rook on a1, Pawn on e2")
 print("  - Black: King on e8, Rook on a8, Pawn on e7")
 
-print("\nTest 2: Convert grid to FEN notation")
-local fen = Saves.gridToFEN(testGrid)
-print("FEN Output: " .. fen)
-print("Expected: R3K3/4P3/8/8/8/8/4p3/r3k3")
-local fenMatch = fen == "R3K3/4P3/8/8/8/8/4p3/r3k3"
-print("Status: " .. (fenMatch and "✓ PASS" or "✗ FAIL"))
+print("Test 2: Convert grid to FEN notation (with turn)")
+local fen_white = Saves.gridToFEN(testGrid, "white")
+local fen_black = Saves.gridToFEN(testGrid, "black")
+print("FEN Output (white turn): " .. fen_white)
+print("FEN Output (black turn): " .. fen_black)
+print("Expected pattern: R3K3/4P3/8/8/8/8/4p3/r3k3 {w|b} KQkq - 0 1")
+local fenMatchWhite = fen_white:match("R3K3/4P3/8/8/8/8/4p3/r3k3 w KQkq %- 0 1") ~= nil
+local fenMatchBlack = fen_black:match("R3K3/4P3/8/8/8/8/4p3/r3k3 b KQkq %- 0 1") ~= nil
+print("Status (white): " .. (fenMatchWhite and "✓ PASS" or "✗ FAIL"))
+print("Status (black): " .. (fenMatchBlack and "✓ PASS" or "✗ FAIL"))
 
-print("\nTest 3: Convert FEN back to grid")
-local recoveredGrid = Saves.gridFromFEN(fen)
-print("Recovered grid created")
+print("\nTest 3: Convert FEN back to grid and extract turn")
+local recoveredGrid, recoveredTurn = Saves.gridFromFEN(fen_white)
+print("Recovered grid created with turn: " .. (recoveredTurn or "nil"))
+print("Expected turn: white")
+print("Status: " .. (recoveredTurn == "white" and "✓ PASS" or "✗ FAIL"))
 
 -- Verify the grid
 local success = true
@@ -56,9 +62,9 @@ for row = 1, 8 do
     end
   end
 end
-print("Status: " .. (success and "✓ PASS - All pieces recovered correctly" or "✗ FAIL - Grid mismatch"))
+print("Grid verification: " .. (success and "✓ PASS - All pieces recovered correctly" or "✗ FAIL - Grid mismatch"))
 
-print("\nTest 4: Save grid to file slot")
+print("\nTest 4: Save grid to file slot (with turn)")
 do
   local Saves = require("saves")
   love.filesystem.createDirectory("saves")
@@ -77,22 +83,23 @@ do
   saveGrid[8][4] = { type = "queen", side = "black" }
   saveGrid[8][5] = { type = "king", side = "black" }
   
-  local fen = Saves.gridToFEN(saveGrid)
+  local fen = Saves.gridToFEN(saveGrid, "white")
   love.filesystem.write("saves/test_slot.fen", fen)
   
   print("Test game saved to: saves/test_slot.fen")
+  print("FEN with turn: " .. fen)
   print("File exists: " .. (love.filesystem.getInfo("saves/test_slot.fen") and "✓ YES" or "✗ NO"))
 end
 
-print("\nTest 5: Load grid from file slot")
+print("\nTest 5: Load grid from file slot (extract turn)")
 do
   local Saves = require("saves")
   
   local fen = love.filesystem.read("saves/test_slot.fen")
   print("FEN loaded: " .. fen)
   
-  local grid = Saves.gridFromFEN(fen)
-  print("Grid loaded successfully")
+  local grid, turn = Saves.gridFromFEN(fen)
+  print("Grid loaded successfully with turn: " .. (turn or "nil"))
   
   -- Verify key pieces
   local tests = {
@@ -113,6 +120,7 @@ do
     end
   end
   
+  print("Turn extracted: " .. (turn == "white" and "✓ PASS (white)" or "✗ FAIL (expected white)"))
   print("Status: " .. (allCorrect and "✓ PASS" or "✗ FAIL"))
 end
 

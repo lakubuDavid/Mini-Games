@@ -25,25 +25,25 @@ function Saves.load()
   assert(file, [[ [Saves::FenLoader] Cannot open file "game.fen" ]])
 
   local fen = file:read("a")
-  local grid = Saves.gridFromFEN(fen)
+  local grid, turn = Saves.gridFromFEN(fen)
 
   file:close()
 
-  return grid
+  return grid, turn
 end
 
-function Saves.save(grid)
+function Saves.save(grid, turn)
   local file = io.open("game.fen","w+")
 
   assert(file, [[ [Saves::FenSaver] Cannot open file "game.fen" ]])
 
-  local fen = Saves.gridToFEN(grid)
+  local fen = Saves.gridToFEN(grid, turn)
   file:write(fen)
 
   file:close()
 end
 
-function Saves.gridToFEN(grid)
+function Saves.gridToFEN(grid, turn)
   local fen = ""
   for rowIdx, row in ipairs(grid) do
     local whiteSpacesCount = 0
@@ -74,16 +74,24 @@ function Saves.gridToFEN(grid)
       fen = fen .. "/"
     end
   end
-  -- TODO: Rest of the fen string
+  -- Add turn (who moves next): w for white, b for black
+  fen = fen .. " " .. (turn == "white" and "w" or "b")
+  -- Add castling rights, en passant, halfmove, fullmove (simplified)
+  fen = fen .. " KQkq - 0 1"
   return fen
 end
 
 function Saves.gridFromFEN(fen)
-  local fenS = Strings:new(fen)
-
-  local positions, turn, castling, enPassant, halfMove, fullMove = fenS:usplit(" ")
+  local fenS = Strings:new(fen):trim()
+  print("Loaded FEN String", fenS:trimmed())
+  local positions, turn, castling, enPassant, halfMove, fullMove = fenS:trimmed():usplit(" ")
   print(positions, turn, castling, enPassant, halfMove, fullMove)
 
+  -- Convert turn from FEN format (w/b) to our format (white/black)
+  -- Note: usplit returns Strings objects, so we need to access .str
+  local turnStr = (type(turn) == "table" and turn.str) or turn
+  local turnValue = turnStr == "w" and "white" or "black"
+  print("Turn parsed: " .. turnStr .. " -> " .. turnValue)
 
   local grid = {}
   for row = 1, 8 do
@@ -118,7 +126,7 @@ function Saves.gridFromFEN(fen)
     -- end
   end
 
-  return grid
+  return grid, turnValue
 end
 
 return Saves

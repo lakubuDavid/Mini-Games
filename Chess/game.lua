@@ -9,12 +9,13 @@ local GameState = require("gamestate")
 local Saves = require("saves")
 local SaveLoadMenu = require("widgets.saveload")
 local luis = require("luis.init")("luis/widgets")
+local Event = require("lib.knife.event")
 
 Game = {
   board = nil,
   ui = nil,
   pieces = {},
-  whose_turn = 1,
+  whose_turn = "w",
   saveLoadMenu = nil
 }
 
@@ -42,6 +43,9 @@ function Game.init(self)
   self:_setupSaveLoadCallbacks()
 
   self:createMainMenu()
+  Event.on("turnChanged", function(newTurn, oldTurn)
+    self.whose_turn = newTurn
+  end)
 end
 
 function Game:createMainMenu()
@@ -252,7 +256,7 @@ end
 
 function Game:_setupSaveLoadCallbacks()
   self.saveLoadMenu:setSaveCallback(function(slotNumber)
-    print("[Game] Saving game to slot " .. slotNumber)
+    print("[Game] Saving game to slot " , slotNumber)
     -- Convert board grid to saveable grid format
     local saveGrid = {}
     for row = 1, 8 do
@@ -270,7 +274,8 @@ function Game:_setupSaveLoadCallbacks()
       end
     end
     -- Save using SaveLoadMenu's save function
-    self.saveLoadMenu:saveGameToSlot(saveGrid, slotNumber)
+    print("sllot",slotNumber)
+    self.saveLoadMenu:saveGameToSlot(saveGrid,self.whose_turn, slotNumber)
     print("[Game] Game saved successfully to slot " .. slotNumber)
   end)
 

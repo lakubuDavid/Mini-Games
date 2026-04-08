@@ -12,8 +12,8 @@ function SaveLoadMenu:new()
     scrollOffset = 0,
     maxVisibleSlots = 5,
     callbacks = {
-      onSave = nil,      -- Called when save slot selected: function(slotNumber, grid)
-      onLoad = nil,      -- Called when load slot selected: function(slotNumber)
+      onSave = nil,      -- Called when save slot selected: function(slotNumber, grid, turn)
+      onLoad = nil,      -- Called when load slot selected: function(slotNumber, grid, turn)
       onCancel = nil     -- Called when menu closed
     }
   }
@@ -67,15 +67,16 @@ function SaveLoadMenu:hide()
   end
 end
 
-function SaveLoadMenu:saveGameToSlot(grid, slotNumber)
+function SaveLoadMenu:saveGameToSlot(grid, turn, slotNumber)
   -- Ensure saves directory exists
   love.filesystem.createDirectory("saves")
+  print("saving to slot",slotNumber)
   
   local filename = "saves/game_" .. slotNumber .. ".fen"
   local Saves = require("saves")
   
-  -- Convert grid to FEN and save
-  local fen = Saves.gridToFEN(grid)
+  -- Convert grid to FEN and save (including turn)
+  local fen = Saves.gridToFEN(grid, turn)
   love.filesystem.write(filename, fen)
   
   print("[SaveLoadMenu] Game saved to " .. filename)
@@ -87,16 +88,16 @@ function SaveLoadMenu:loadGameFromSlot(slotNumber)
   -- Check if file exists
   if not love.filesystem.getInfo(filename) then
     print("[SaveLoadMenu] File not found: " .. filename)
-    return nil
+    return nil, nil
   end
   
   -- Load FEN and convert to grid
   local Saves = require("saves")
   local fen = love.filesystem.read(filename)
-  local grid = Saves.gridFromFEN(fen)
+  local grid, turn = Saves.gridFromFEN(fen)
   
   print("[SaveLoadMenu] Game loaded from " .. filename)
-  return grid
+  return grid, turn
 end
 
 function SaveLoadMenu:mousepressed(x, y, button)
@@ -124,15 +125,15 @@ function SaveLoadMenu:mousepressed(x, y, button)
     if y >= slotY and y < slotY + slotClickRadius then
       local slot = self.saveSlots[i]
       if self.mode == "save" then
-        -- Trigger save callback with slot number
+        -- Trigger save callback with slot number (will be passed grid and turn from game.lua)
         if self.callbacks.onSave then
           self.callbacks.onSave(slot.slot)
         end
       elseif self.mode == "load" and slot.exists then
-        -- Load and trigger callback
-        local grid = self:loadGameFromSlot(slot.slot)
+        -- Load and trigger callback with grid and turn
+        local grid, turn = self:loadGameFromSlot(slot.slot)
         if grid and self.callbacks.onLoad then
-          self.callbacks.onLoad(slot.slot, grid)
+          self.callbacks.onLoad(slot.slot, grid, turn)
         end
       end
       self:hide()
